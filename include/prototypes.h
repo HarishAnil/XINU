@@ -1,9 +1,3 @@
-/* Macro function for measuring cycles for system calls */
-#define READ_RDTSC_TIMER(cycles_high, cycles_low)  asm volatile ("RDTSC\n\t" "mov %%edx, %0\n\t" "mov %%eax, %1\n\t": "=r" (cycles_high), "=r" (cycles_low));
-
-/* in file syscall_summary.c*/
-extern void pr_status_syscall_summary(void);
-
 /* in file 82545EMInit.c */
 extern	status	_82545EMInit(struct ethcblk *);
 extern	status	_82545EM_read_phy_reg(struct ethcblk *, uint32, uint16 *);

@@ -10,7 +10,6 @@ syscall	kill(
 	  pid32		pid		/* ID of process to kill	*/
 	)
 {
-	uint32 start = ctr1000;
 	intmask	mask;			/* Saved interrupt mask		*/
 	struct	procent *prptr;		/* Ptr to process's table entry	*/
 	int32	i;			/* Index into descriptors	*/
@@ -35,14 +34,12 @@ syscall	kill(
 	switch (prptr->prstate) {
 	case PR_CURR:
 		prptr->prstate = PR_FREE;	/* Suicide */
-		proctab[currpid].kill+=1;                 /* Since state changes, increase the counter*/
 		resched();
 
 	case PR_SLEEP:
 	case PR_RECTIM:
 		unsleep(pid);
 		prptr->prstate = PR_FREE;
-		proctab[currpid].kill+=1;                 /* Since state changes, increase the counter*/
 		break;
 
 	case PR_WAIT:
@@ -55,10 +52,8 @@ syscall	kill(
 
 	default:
 		prptr->prstate = PR_FREE;
-		proctab[currpid].kill+=1;                 /* Since state changes, increase the counter*/
 	}
 
 	restore(mask);
-	proctab[currpid].kill_time += (ctr1000 - start);
 	return OK;
 }

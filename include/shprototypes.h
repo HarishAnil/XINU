@@ -1,9 +1,3 @@
-/* in file xsh_printprocstk.c */
-extern	shellcmd  xsh_printprocstk	(int32, char *[]);
-
-/* in file xsh_reset.c */
-extern	shellcmd  xsh_reset	(int32, char *[]);
-
 /* in file xsh_argecho.c */
 extern	shellcmd  xsh_argecho	(int32, char *[]);
 
@@ -61,6 +55,8 @@ extern	shellcmd  xsh_ping	(int32, char *[]);
 /* in file xsh_ps.c */
 extern	shellcmd  xsh_ps	(int32, char *[]);
 
+/* in file xsh_reset.c */
+extern shellcmd xsh_reset	(int32, char *[]);
 /* in file xsh_sleep.c */
 extern	shellcmd  xsh_sleep	(int32, char *[]);
 

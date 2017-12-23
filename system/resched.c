@@ -10,7 +10,6 @@ struct	defer	Defer;
  */
 void	resched(void)		/* Assumes interrupts are disabled	*/
 {
-	uint32 start = ctr1000;
 	struct procent *ptold;	/* Ptr to table entry for old process	*/
 	struct procent *ptnew;	/* Ptr to table entry for new process	*/
 
@@ -35,18 +34,17 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 		ptold->prstate = PR_READY;
 		insert(currpid, readylist, ptold->prprio);
 	}
-	/* Since the state changes, increase the counter*/
-	ptold->resched+=1;
-	
+
 	/* Force context switch to highest priority ready process */
+
 	currpid = dequeue(readylist);
 	ptnew = &proctab[currpid];
 	ptnew->prstate = PR_CURR;
 	preempt = QUANTUM;		/* Reset time slice for process	*/
 	ctxsw(&ptold->prstkptr, &ptnew->prstkptr);
-	ptold->resched_time += (ctr1000 - start);
 
-	/* Old process returns here when resumed */	
+	/* Old process returns here when resumed */
+
 	return;
 }
 

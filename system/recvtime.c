@@ -10,7 +10,6 @@ umsg32	recvtime(
 	  int32		maxwait		/* Ticks to wait before timeout */
         )
 {
-	uint32 start = ctr1000;
 	intmask	mask;			/* Saved interrupt mask		*/
 	struct	procent	*prptr;		/* Tbl entry of current process	*/
 	umsg32	msg;			/* Message to return		*/
@@ -29,7 +28,6 @@ umsg32	recvtime(
 			return SYSERR;
 		}
 		prptr->prstate = PR_RECTIM;
-		prptr->recvtime+=1;    /* Since the state changes, increase the counter*/
 		resched();
 	}
 
@@ -42,6 +40,5 @@ umsg32	recvtime(
 		msg = TIMEOUT;
 	}
 	restore(mask);
-	prptr->recvtime_time += (ctr1000 - start);
 	return msg;
 }
