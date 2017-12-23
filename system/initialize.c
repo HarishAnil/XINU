@@ -175,11 +175,14 @@ static	void	sysinit()
 	/* Initialize process table entries free */
 
 	for (i = 0; i < NPROC; i++) {
-		prptr = &proctab[i];
-		prptr->prstate = PR_FREE;
-		prptr->prname[0] = NULLCH;
-		prptr->prstkbase = NULL;
-		prptr->prprio = 0;
+	  prptr = &proctab[i];
+	  prptr->prstate = PR_FREE;
+	  prptr->prname[0] = NULLCH;
+	  prptr->prstkbase = NULL;
+	  prptr->prprio = prptr->wait = prptr->kill = prptr->ready = prptr->receive = prptr->suspend = prptr->recvtime = prptr->create = prptr->sleep = prptr->resched = 0;
+	  prptr->wait_time = prptr->kill_time = prptr->ready_time = prptr->receive_time = prptr->suspend_time = prptr->recvtime_time = prptr->create_time = prptr->sleep_time = prptr->resched_time = 0;
+	  
+	  //prptr->call_ptr = NULL;
 	}
 
 	/* Initialize the Null process entry */	
@@ -191,15 +194,19 @@ static	void	sysinit()
 	prptr->prstkbase = getstk(NULLSTK);
 	prptr->prstklen = NULLSTK;
 	prptr->prstkptr = 0;
+	prptr->prtime = ctr1000;
+
+	//prptr->call_ptr = NULL;
+
 	currpid = NULLPROC;
 	
 	/* Initialize semaphores */
 
 	for (i = 0; i < NSEM; i++) {
-		semptr = &semtab[i];
-		semptr->sstate = S_FREE;
-		semptr->scount = 0;
-		semptr->squeue = newqueue();
+	  semptr = &semtab[i];
+	  semptr->sstate = S_FREE;
+	  semptr->scount = 0;
+	  semptr->squeue = newqueue();
 	}
 
 	/* Initialize buffer pools */
@@ -220,7 +227,7 @@ static	void	sysinit()
 	clkinit();
 
 	for (i = 0; i < NDEVS; i++) {
-		init(i);
+	  init(i);
 	}
 	return;
 }

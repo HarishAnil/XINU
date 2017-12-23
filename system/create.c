@@ -17,6 +17,7 @@ pid32	create(
 	  ...
 	)
 {
+	uint32 start = ctr1000;
 	uint32		savsp, *pushsp;
 	intmask 	mask;    	/* Interrupt mask		*/
 	pid32		pid;		/* Stores new process id	*/
@@ -44,6 +45,10 @@ pid32	create(
 	prptr->prstkbase = (char *)saddr;
 	prptr->prstklen = ssize;
 	prptr->prname[PNMLEN-1] = NULLCH;
+	prptr->prtime = ctr1000;
+
+	proctab[currpid].create+=1; /* Since the state changes, increase the counter*/
+
 	for (i=0 ; i<PNMLEN-1 && (prptr->prname[i]=name[i])!=NULLCH; i++)
 		;
 	prptr->prsem = -1;
@@ -93,7 +98,10 @@ pid32	create(
 	*--saddr = 0;			/* %esi */
 	*--saddr = 0;			/* %edi */
 	*pushsp = (unsigned long) (prptr->prstkptr = (char *)saddr);
+
 	restore(mask);
+
+	proctab[currpid].create_time += (ctr1000 - start);
 	return pid;
 }
 
@@ -103,19 +111,18 @@ pid32	create(
  */
 local	pid32	newpid(void)
 {
-	uint32	i;			/* Iterate through all processes*/
-	static	pid32 nextpid = 1;	/* Position in table to try or	*/
+  uint32 i;			/* Iterate through all processes*/
+  static pid32 nextpid = 1;	/* Position in table to try or	*/
 					/*   one beyond end of table	*/
-
-	/* Check all NPROC slots */
-
-	for (i = 0; i < NPROC; i++) {
-		nextpid %= NPROC;	/* Wrap around to beginning */
-		if (proctab[nextpid].prstate == PR_FREE) {
-			return nextpid++;
-		} else {
-			nextpid++;
-		}
-	}
-	return (pid32) SYSERR;
+  
+  /* Check all NPROC slots */
+  for (i = 0; i < NPROC; i++) {
+    nextpid %= NPROC;	/* Wrap around to beginning */
+    if (proctab[nextpid].prstate == PR_FREE) {
+      return nextpid++;
+    } else {
+      nextpid++;
+    }
+  }
+  return (pid32) SYSERR;
 }
