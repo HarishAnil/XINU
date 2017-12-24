@@ -50,9 +50,9 @@ void	nulluser()
 	uint32	free_mem;		/* Total amount of free memory	*/
 	
 	/* Initialize the system */
-
+	//kprintf("\nInitializing systems sysinit call");
 	sysinit();
-
+	//kprintf("\nsystems sysinit call complete");
 	/* Output Xinu memory layout */
 	free_mem = 0;
 	for (memptr = memlist.mnext; memptr != NULL;
@@ -75,15 +75,17 @@ void	nulluser()
 		(uint32)&data, (uint32)&ebss - 1);
 
 	/* Enable interrupts */
-
+	//kprintf("\nenabling interrupts");
 	enable();
+	//kprintf("\ninterrupts enabled");
 
 	/* Initialize the network stack and start processes */
-
+	//kprintf("\nInitializing the network stack and start processes");
 	net_init();
+	//kprintf("\nInitialized the network stack and started processes");
 
 	/* Create a process to finish startup and start main */
-
+	//kprintf("\nAbout to create startup process");
 	resume(create((void *)startup, INITSTK, INITPRIO,
 					"Startup process", 0, NULL));
 
@@ -174,12 +176,38 @@ static	void	sysinit()
 
 	/* Initialize process table entries free */
 
-	for (i = 0; i < NPROC; i++) {
+	for (i = 0; i < NPROC; i++) {		
 		prptr = &proctab[i];
+
+		prptr->is_userproc = 0;
+		prptr->finished_execution = 0;
+		prptr->runtime_remaining = 0;
+		prptr->original_runtime = 0;
+
 		prptr->prstate = PR_FREE;
 		prptr->prname[0] = NULLCH;
 		prptr->prstkbase = NULL;
 		prptr->prprio = 0;
+		prptr->wait = 0;
+		prptr->kill = 0;
+		prptr->ready = 0;
+		prptr->receive = 0;
+		prptr->suspend = 0;
+		prptr->recvtime = 0;
+		prptr->create = 0;
+		prptr->sleep = 0;
+		prptr->resched = 0;
+		prptr->wait_time = 0;
+		prptr->kill_time = 0;
+		prptr->ready_time = 0;
+		prptr->receive_time = 0;
+		prptr->suspend_time = 0;
+		prptr->recvtime_time = 0;
+		prptr->create_time = 0;
+		prptr->sleep_time = 0;
+		prptr->resched_time = 0;
+
+		//prptr->call_ptr = NULL;
 	}
 
 	/* Initialize the Null process entry */	
@@ -191,6 +219,10 @@ static	void	sysinit()
 	prptr->prstkbase = getstk(NULLSTK);
 	prptr->prstklen = NULLSTK;
 	prptr->prstkptr = 0;
+	prptr->prtime = ctr1000;
+
+	//prptr->call_ptr = NULL;
+
 	currpid = NULLPROC;
 	
 	/* Initialize semaphores */
@@ -206,10 +238,13 @@ static	void	sysinit()
 
 	bufinit();
 
-	/* Create a ready list for processes */
+	/* Create a ready list for system processes */
 
 	readylist = newqueue();
 
+	/* Create a ready list for system processes */
+
+	userlist = newqueue();
 
 	/* initialize the PCI bus */
 

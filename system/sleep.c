@@ -12,10 +12,12 @@ syscall	sleep(
 	  int32	delay		/* Time to delay in seconds	*/
 	)
 {
+	long int start = ctr1000;
 	if ( (delay < 0) || (delay > MAXSECONDS) ) {
 		return SYSERR;
 	}
 	sleepms(1000*delay);
+	proctab[currpid].sleep_time += (ctr1000 - start);
 	return OK;
 }
 
@@ -29,6 +31,12 @@ syscall	sleepms(
 {
 	intmask	mask;			/* Saved interrupt mask		*/
 
+	//kprintf("\n%d::Call from sleep.c: Process %s called sleep:", ctr1000,proctab[currpid].prname);
+	if(proctab[currpid].is_userproc == 1){
+		kprintf("-%d",ctr1000);
+		//kprintf("\n caller is %d\n",currpid);		
+
+	}
 	if (delay < 0) {
 		return SYSERR;
 	}
@@ -47,6 +55,7 @@ syscall	sleepms(
 	}
 
 	proctab[currpid].prstate = PR_SLEEP;
+	proctab[currpid].sleep+=1;
 	resched();
 	restore(mask);
 	return OK;

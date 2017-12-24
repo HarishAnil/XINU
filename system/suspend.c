@@ -10,6 +10,7 @@ syscall	suspend(
 	  pid32		pid		/* ID of process to suspend	*/
 	)
 {
+	long int start = ctr1000;
 	intmask	mask;			/* Saved interrupt mask		*/
 	struct	procent *prptr;		/* Ptr to process's table entry	*/
 	pri16	prio;			/* Priority to return		*/
@@ -31,11 +32,14 @@ syscall	suspend(
 		getitem(pid);		    /* Remove a ready process	*/
 					    /*   from the ready list	*/
 		prptr->prstate = PR_SUSP;
+		prptr->suspend+=1;
 	} else {
 		prptr->prstate = PR_SUSP;   /* Mark the current process	*/
+		prptr->suspend+=1;
 		resched();		    /*   suspended and resched.	*/
 	}
 	prio = prptr->prprio;
 	restore(mask);
+	prptr->suspend_time += (ctr1000 - start);
 	return prio;
 }

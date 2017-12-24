@@ -1,26 +1,30 @@
-/* create.c - create, newpid */
+/* create_user_proc.c - create user processes, newpid */
 
 #include <xinu.h>
 
 local	int newpid();
 
+void timed_execution(uint32 run_time) {
+	while(proctab[currpid].finished_execution == 0);
+//	kprintf("\nP%d-termination:%d",currpid,ctr1000);
+}
+
 /*------------------------------------------------------------------------
  *  create  -  Create a process to start running a function on x86
  *------------------------------------------------------------------------
  */
-pid32	create(
-	  void		*funcaddr,	/* Address of the function	*/
-	  uint32	ssize,		/* Stack size in bytes		*/
-	  pri16		priority,	/* Process priority > 0		*/
-	  char		*name,		/* Name (for debugging)		*/
-	  uint32	nargs,		/* Number of args that follow	*/
+pid32 create_user_proc(
+	  void		*funcaddr,		/* Address of the function	*/
+	  uint32	ssize,			/* Stack size in bytes		*/
+	  uint32	runtime_remaining,	/* Runtime remaining > 0		*/
+	  char		*name,			/* Name (for debugging)		*/
+	  uint32	nargs,			/* Number of args that follow	*/
 	  ...
 	)
 {
-
 	uint64 start;
 	start = ctr1000;
-
+	
 	uint32		savsp, *pushsp;
 	intmask 	mask;    	/* Interrupt mask		*/
 	pid32		pid;		/* Stores new process id	*/
@@ -33,25 +37,32 @@ pid32	create(
 	if (ssize < MINSTK)
 		ssize = MINSTK;
 	ssize = (uint32) roundmb(ssize);
-	if ( (priority < 1) || ((pid=newpid()) == SYSERR) ||
+	if ( (runtime_remaining < 1) || ((pid=newpid()) == SYSERR) ||
 	     ((saddr = (uint32 *)getstk(ssize)) == (uint32 *)SYSERR) ) {
 		restore(mask);
 		return SYSERR;
 	}
-	//kprintf("\nCreating process with pid: %d\n",pid);
+
 	prcount++;
 	prptr = &proctab[pid];
+	//kprintf("\n************************************");
+//	kprintf("\ncreating user process with pid: %d",pid);
 
+	//kprintf("\n************************************");
 	/* Initialize process table entry for new process */
-	prptr->prstate = PR_SUSP;	/* Initial state is suspended	*/
-	prptr->prprio = priority;
+	prptr->prstate = PR_SUSP;		/* Initial state is suspended	*/
+
+	prptr->runtime_remaining = runtime_remaining;
+	prptr->finished_execution = 0;
+	prptr->is_userproc = 1;
+	prptr->original_runtime = runtime_remaining;
+	kprintf("\nP%d-creation::%d::%d",pid,ctr1000,prptr->original_runtime);
+
 	prptr->prstkbase = (char *)saddr;
 	prptr->prstklen = ssize;
 	prptr->prname[PNMLEN-1] = NULLCH;
 	prptr->prtime = ctr1000;
 	prptr->create+=1;
-	prptr->runtime_remaining = 0;
-	prptr->is_userproc = 0;
 
 	for (i=0 ; i<PNMLEN-1 && (prptr->prname[i]=name[i])!=NULLCH; i++)
 		;
