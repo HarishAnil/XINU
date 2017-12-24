@@ -45,6 +45,7 @@ char  	*getstk(
 	} else {				/* Remove top section	*/
 		fits->mlength -= nbytes;
 		fits = (struct memblk *)((uint32)fits + fits->mlength);
+		//kprintf("fit block : %d\n",(uint32)fits);
 	}
 	memlist.mlength -= nbytes;
 	restore(mask);

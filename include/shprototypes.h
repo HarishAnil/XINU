@@ -1,9 +1,6 @@
 /* in file xsh_argecho.c */
 extern	shellcmd  xsh_argecho	(int32, char *[]);
 
-/* in file xsh_reset.c */
-extern	shellcmd  xsh_reset	(int32, char *[]);
-
 /* in file xsh_arp.c */
 extern	shellcmd  xsh_arp	(int32, char *[]);
 

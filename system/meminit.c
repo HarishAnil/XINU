@@ -12,12 +12,14 @@ void	*maxheap;		/* Highest valid heap address		*/
 void	meminit(void) {
 
        struct	memblk	*memptr;	/* Ptr to memory block		*/
+       uint32	free_mem;
 
        /* Initialize the free memory list */
 
        /* Note: we pre-allocate  the "hole" between 640K and 1024K */
 
-       maxheap = (void *)0x600000;	/* Assume 64 Mbytes for now */
+       //comment out the nextline, maxheap initialized in i386.c
+       //maxheap = (void *)0x600000;	/* Assume 64 Mbytes for now */
        minheap = &end;
 
        memptr = memlist.mnext = (struct memblk *)roundmb(minheap);
@@ -38,5 +40,14 @@ void	meminit(void) {
        			(uint32)&end - NULLSTK);
        }
 
+	free_mem = 0;
+	for (memptr = memlist.mnext; memptr != NULL;
+						memptr = memptr->mnext) {
+		free_mem += memptr->mlength;
+	}
+
+	memlist.mlength=free_mem;
+	//kprintf("avalilable free mem : %X\n", free_mem);
+	//kprintf("max heap :  %X\n",(uint32)&maxheap);
        return;
 }

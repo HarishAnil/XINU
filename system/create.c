@@ -55,6 +55,85 @@ pid32	create(
 	prptr->prdesc[1] = CONSOLE;
 	prptr->prdesc[2] = CONSOLE;
 
+
+	/* Paging Related */
+
+	uint32 frame_pd, frame_pt;
+	pt_t *proc_pt;
+	status_t status;
+
+
+	/* PAGE DIRECORY */
+
+	// Get a free frame to create the PD
+	frame_pd = get_frame_for_PDPT(0);
+	
+	// Create a Page directory for the null process
+	pd_t *proc_pd = (pd_t*)(frame_pd * PAGE_SIZE);	
+
+
+	// initialize the page directory
+	status = initialize_page_dir(proc_pd);
+	if(status == SYSERR)
+		return SYSERR;
+
+	// Map the page directory
+
+	// Initially mapping the entire physical frame 
+	// onto the virtual addr space of the process
+
+	// What I am currently doing here is to map the entire physical frames
+	// from 0 to 8192 into this page table as a one-to-one map!! I know it is wasteful
+
+	if(strcmp(name,"swap daemon") == 0){
+		for(i=0; i<8; i++){
+			
+			/* PAGE TABLE*/
+
+			// Get a free frame to create the PT
+			frame_pt = get_frame_for_PDPT(1);
+			
+			// Create a Page directory handle for the null process
+			proc_pt = (pt_t*)(frame_pt * PAGE_SIZE);	
+		
+			status = add_directory_entry(proc_pd, frame_pt, i);
+
+			// Initialize the page table to map to the static regions
+
+			status = initialize_page_table(proc_pt,i);
+			if(status == SYSERR)
+				return SYSERR;
+
+		}
+	} else {
+		for(i=0; i<8; i++){
+			
+			/* PAGE TABLE*/
+
+			// Get a free frame to create the PT
+			frame_pt = get_frame_for_PDPT(1);
+			
+			// Create a Page directory handle for the null process
+			proc_pt = (pt_t*)(frame_pt * PAGE_SIZE);	
+		
+			status = add_directory_entry(proc_pd, frame_pt, i);
+
+			// Initialize the page table to map to the static regions
+
+			status = initialize_page_table(proc_pt,i);
+			if(status == SYSERR)
+				return SYSERR;
+
+		}
+
+	}
+
+	unsigned long cr3_word = frame_pd* PAGE_SIZE;
+	cr3_word = (cr3_word >> 12) << 12;	
+	proctab[pid].pdbr = cr3_word;
+
+//	kprintf("Cr3 value written : 0x%X", cr3_word);
+
 	/* Initialize stack as if the process was called		*/
 
 	*saddr = STACKMAGIC;

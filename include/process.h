@@ -38,6 +38,19 @@
 
 #define NDESC		5	/* must be odd to make procent 4N bytes	*/
 
+struct shared_mem {
+	struct shared_mem* next;
+
+	/* Shared Memory Related */
+	pid32 shared_heap_owner;
+	char* shared_heap_owner_start_addr;
+	char* shared_heap_my_start_addr;
+	char* shared_heap_size;
+
+	int sharers_list[NPROC];
+	int is_owner;
+};
+
 /* Definition of the process table (multiple of 32 bits) */
 
 struct procent {		/* Entry in the process table		*/
@@ -52,6 +65,15 @@ struct procent {		/* Entry in the process table		*/
 	umsg32	prmsg;		/* Message sent to this process		*/
 	bool8	prhasmsg;	/* Nonzero iff msg is valid		*/
 	int16	prdesc[NDESC];	/* Device descriptors for process	*/
+
+	/* Paging Related */
+	uint32	pdbr;
+	uint32 	vheap_page_start;
+	uint32 	vheap_size;
+	struct 	vmemblk *vmemlist;
+
+	/* Shared Memory Related */
+	struct shared_mem *shared_heap_table;
 };
 
 /* Marker for the top of a process stack (used to help detect overflow)	*/

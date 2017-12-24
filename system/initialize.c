@@ -48,6 +48,7 @@ void	nulluser()
 {	
 	struct	memblk	*memptr;	/* Ptr to memory block		*/
 	uint32	free_mem;		/* Total amount of free memory	*/
+	status_t status;
 	
 	/* Initialize the system */
 
@@ -81,6 +82,102 @@ void	nulluser()
 	/* Initialize the network stack and start processes */
 
 	net_init();
+	
+	
+	/* Before proceeding further let us start paging and setup stuff needed for that before doing so */
+	
+	int i;
+	uint32 frame_pd, frame_pt;
+	pt_t *nullproc_pt;
+
+	// First initialise the free-list for our frame fetcher
+	frame_tab_init();
+
+	/* PAGE DIRECORY */
+
+	// Get a free frame to create the PD
+	frame_pd = get_frame_for_PDPT(0);
+	
+	// Create a Page directory for the null process
+	pd_t *nullproc_pd = (pd_t*)(frame_pd * PAGE_SIZE);	
+
+
+	// initialize the page directory
+	status = initialize_page_dir(nullproc_pd);
+	if(status == SYSERR)
+		return SYSERR;
+
+	// Map the page directory
+
+	// Initially mapping the entire physical frame 
+	// onto the virtual addr space of the process
+
+	// What I am currently doing here is to map the entire physical frames
+	// from 0 to 8192 into this page table as a one-to-one map!! I know it is wasteful
+
+	// Now i am trying to map specifically!!
+
+	for(i=0; i<4; i++){
+		
+		/* PAGE TABLE*/
+
+		// Get a free frame to create the PT
+		frame_pt = get_frame_for_PDPT(1);
+		
+		// Create a Page directory handle for the null process
+		nullproc_pt = (pt_t*)(frame_pt * PAGE_SIZE);	
+	
+		status = add_directory_entry(nullproc_pd, frame_pt, i);
+
+		// Initialize the page table to map to the static regions
+
+		status = initialize_page_table(nullproc_pt,i);
+		if(status == SYSERR)
+			return SYSERR;
+
+
+	}
+
+	// Also map stack 
+
+	uint32 stk_ptr = (uint32)proctab[0].prstkptr;
+	//kprintf("Stack ptr: %X\n",stk_ptr)	;
+	
+	uint32 dir_entry = (uint32)proctab[currpid].prstkbase >>22;
+	//kprintf("Stack dir : %X\n",dir_entry)	;
+
+	uint32 page_no = (((uint32)proctab[currpid].prstkbase >>12)<<22)>>22;
+	//kprintf("Stack page no: %X\n",page_no)	;
+
+//	status = add_directory_entry(nullproc_pd, )
+		
+
+	
+//	kprintf("value of proc_pd : %X\n",*nullproc_pd);
+
+
+	// set the pdbr so that hardware knows where to look for the dir
+	unsigned long cr3_word = frame_pd* PAGE_SIZE;
+	cr3_word = (cr3_word >> 12) << 12;	
+	write_cr3(cr3_word);
+	
+//	kprintf("Cr3 value written : 0x%X", read_cr3());
+
+	// save into proctab
+	proctab[getpid()].pdbr = cr3_word; 
+
+	// Register our interrupt service routine
+	set_evec(14, (unsigned long)pfintr);
+
+	pd_t *a = (pd_t*)(read_cr3());
+	pt_t *b = (pt_t*)(((a+1)->pd_base)*PAGE_SIZE);
+//	kprintf("addr of PD : %X\n",*a);
+//	kprintf("addr of PT : %X\n",*b);
+	unsigned long adr = read_cr2();
+//	kprintf("addr in Cr2 : %X\n",adr);
+	
+	// enable paging
+	enable_paging();
 
 	/* Create a process to finish startup and start main */
 
@@ -161,7 +258,8 @@ static	void	sysinit()
 	/* Initialize free memory list */
 	
 	meminit();
-
+	stacktrace();
+	
 	/* Initialize system variables */
 
 	/* Count the Null process as the first process in the system */
@@ -191,6 +289,7 @@ static	void	sysinit()
 	prptr->prstkbase = getstk(NULLSTK);
 	prptr->prstklen = NULLSTK;
 	prptr->prstkptr = 0;
+	//kprintf("Stack base : %X\n",prptr->prstkbase);
 	currpid = NULLPROC;
 	
 	/* Initialize semaphores */
@@ -209,7 +308,6 @@ static	void	sysinit()
 	/* Create a ready list for processes */
 
 	readylist = newqueue();
-
 
 	/* initialize the PCI bus */
 

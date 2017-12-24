@@ -44,8 +44,11 @@ void	setsegs()
 	struct sd	*psd;
 	uint32		np, npages;
 
-	npages = 4096;		/* 16 Meg for now */
-	maxheap = (char *)(npages * NBPG - 1);
+	//npages = 4096;	/* 16 Meg for now */
+	npages = 8192;		/* 32 Meg for HW4 */
+
+	maxheap = (char *)( 1024* NBPG - 1);
+	//maxheap = (char *)( npages* NBPG - 1);
 
 	psd = &gdt_copy[1];	/* kernel code segment */
 	np = ((int)&etext + NBPG-1) / NBPG;	/* # code pages */
@@ -53,11 +56,11 @@ void	setsegs()
 	psd->sd_hilimit = np >> 16;
 
 	psd = &gdt_copy[2];	/* kernel data segment */
-	psd->sd_lolimit = npages;
+	psd->sd_lolimit = npages*2;
 	psd->sd_hilimit = npages >> 16;
 
 	psd = &gdt_copy[3];	/* kernel stack segment */
-	psd->sd_lolimit = npages;
+	psd->sd_lolimit = npages*2;
 	psd->sd_hilimit = npages >> 16;
 
 	psd = &gdt_copy[4];	/* bootp code segment */
@@ -65,7 +68,8 @@ void	setsegs()
 	psd->sd_hilimit = npages >> 16;
 
 	memcpy(gdt, gdt_copy, sizeof(gdt_copy));
-	initsp = npages*NBPG  - 4;
+	initsp = 1024*NBPG  - 4;
+	//initsp = npages*NBPG  - 4;
 }
 
 extern	int outb(int, int);

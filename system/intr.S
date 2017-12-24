@@ -87,7 +87,7 @@ spurious_irq15:
  */
 Xtrap:
 	call	trap			/* Call C trap handler		*/
-	iret				/* Should never occur		*/
+	iret					/* Should never occur		*/
 
 /************************************************************************/
 /*									*/
