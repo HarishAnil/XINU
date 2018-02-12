@@ -10,6 +10,7 @@ syscall	wait(
 	  sid32		sem		/* Semaphore on which to wait  */
 	)
 {
+	long int start = ctr1000;	
 	intmask mask;			/* Saved interrupt mask		*/
 	struct	procent *prptr;		/* Ptr to process's table entry	*/
 	struct	sentry *semptr;		/* Ptr to sempahore table entry	*/
@@ -29,6 +30,8 @@ syscall	wait(
 	if (--(semptr->scount) < 0) {		/* If caller must block	*/
 		prptr = &proctab[currpid];
 		prptr->prstate = PR_WAIT;	/* Set state to waiting	*/
+		prptr->wait+=1;
+		prptr->wait_time += (ctr1000 - start);
 		prptr->prsem = sem;		/* Record semaphore ID	*/
 		enqueue(currpid,semptr->squeue);/* Enqueue on semaphore	*/
 		resched();			/*   and reschedule	*/

@@ -40,18 +40,28 @@
 
 /* Definition of the process table (multiple of 32 bits) */
 
-struct procent {		/* Entry in the process table		*/
-	uint16	prstate;	/* Process state: PR_CURR, etc.		*/
-	pri16	prprio;		/* Process priority			*/
-	char	*prstkptr;	/* Saved stack pointer			*/
-	char	*prstkbase;	/* Base of run time stack		*/
-	uint32	prstklen;	/* Stack length in bytes		*/
-	char	prname[PNMLEN];	/* Process name				*/
-	sid32	prsem;		/* Semaphore on which process waits	*/
-	pid32	prparent;	/* ID of the creating process		*/
-	umsg32	prmsg;		/* Message sent to this process		*/
-	bool8	prhasmsg;	/* Nonzero iff msg is valid		*/
-	int16	prdesc[NDESC];	/* Device descriptors for process	*/
+struct procent {			/* Entry in the process table			*/
+	uint16	prstate;		/* Process state: PR_CURR, etc.			*/
+	pri16	prprio;			/* Process priority				*/
+	char	*prstkptr;		/* Saved stack pointer				*/
+	char	*prstkbase;		/* Base of run time stack			*/
+	uint32	prstklen;		/* Stack length in bytes			*/
+	char	prname[PNMLEN];		/* Process name					*/
+	sid32	prsem;			/* Semaphore on which process waits		*/
+	pid32	prparent;		/* ID of the creating process			*/
+	umsg32	prmsg;			/* Message sent to this process			*/
+	bool8	prhasmsg;		/* Nonzero iff msg is valid			*/
+	int16	prdesc[NDESC];		/* Device descriptors for process		*/
+long int	prtime;			/* Record the time in milliseconds on creation	*/
+	volatile long int  wait,kill,ready,receive,suspend,recvtime,create,sleep,resched;
+	volatile long int wait_time,kill_time,ready_time,receive_time,suspend_time,recvtime_time,create_time,sleep_time,resched_time;
+	volatile uint32 	runtime_remaining;	/* Record the runtime remaining for STCF policy */
+	bool8	burst_done;	/* Non zero if process is no longer running	*/
+	bool8	is_userproc;		/* Non zero if it is a user process		*/
+	uint32 number_bursts, burst_duration,sleep_duration;
+	uint16 ta,qnum;
+
+//	struct syscall_list* call_ptr 	/* Pointer to array of system call		*/
 };
 
 /* Marker for the top of a process stack (used to help detect overflow)	*/

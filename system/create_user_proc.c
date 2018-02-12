@@ -1,26 +1,53 @@
-/* create.c - create, newpid */
+/* create_user_proc.c - create user processes, newpid */
 
 #include <xinu.h>
+#include <stdarg.h>
 
 local	int newpid();
+
+void burst_execution(uint32 number_bursts, uint32 burst_duration, uint32 sleep_duration) {
+	while(proctab[currpid].number_bursts > 0)
+	{
+		while(proctab[currpid].burst_done == 0);
+		if(proctab[currpid].number_bursts > 1)
+			sleepms(sleep_duration);
+		proctab[currpid].burst_done = 0;		
+		proctab[currpid].number_bursts -- ;
+		proctab[currpid].burst_duration = burst_duration;
+		//kprintf("\n%d::Process %s about to call sleep",ctr1000,proctab[currpid].prname);
+		//kprintf("\n%d::Process %s awake from sleep and resumes",ctr1000,proctab[currpid].prname);		
+	}
+}
 
 /*------------------------------------------------------------------------
  *  create  -  Create a process to start running a function on x86
  *------------------------------------------------------------------------
  */
-pid32	create(
-	  void		*funcaddr,	/* Address of the function	*/
-	  uint32	ssize,		/* Stack size in bytes		*/
-	  pri16		priority,	/* Process priority > 0		*/
-	  char		*name,		/* Name (for debugging)		*/
-	  uint32	nargs,		/* Number of args that follow	*/
+pid32 create_user_proc(
+	  void		*funcaddr,		/* Address of the function	*/
+	  uint32	ssize,			/* Stack size in bytes		*/
+	  uint32	runtime_remaining,	/* Runtime remaining > 0		*/
+	  char		*name,			/* Name (for debugging)		*/
+	  uint32	nargs,			/* Number of args that follow	*/	  
 	  ...
 	)
 {
-
+	uint32 number_bursts, burst_duration, sleep_duration;
 	uint64 start;
 	start = ctr1000;
-
+	
+	/*Retrieve the arguments for burst execution*/
+	va_list args;
+	va_start(args,nargs);
+	number_bursts = va_arg(args,uint32);
+	burst_duration = va_arg(args,uint32);
+	sleep_duration = va_arg(args,uint32);
+	
+	va_end(args);
+	
+	//kprintf("\nBurst is %d, time is %d, sleep is %d",number_bursts,burst_duration,sleep_duration);
+	
+	
 	uint32		savsp, *pushsp;
 	intmask 	mask;    	/* Interrupt mask		*/
 	pid32		pid;		/* Stores new process id	*/
@@ -33,25 +60,35 @@ pid32	create(
 	if (ssize < MINSTK)
 		ssize = MINSTK;
 	ssize = (uint32) roundmb(ssize);
-	if ( (priority < 1) || ((pid=newpid()) == SYSERR) ||
+	if ( (runtime_remaining < 1) || ((pid=newpid()) == SYSERR) ||
 	     ((saddr = (uint32 *)getstk(ssize)) == (uint32 *)SYSERR) ) {
 		restore(mask);
 		return SYSERR;
 	}
-	//kprintf("\nCreating process with pid: %d\n",pid);
+
 	prcount++;
 	prptr = &proctab[pid];
-
+	//kprintf("\n************************************");
+	//kprintf("\ncreating user process with pid: %d",pid);
+	kprintf("\nP%d-creation::%d::%d",pid,ctr1000,burst_duration);
+	//kprintf("\n************************************");
 	/* Initialize process table entry for new process */
-	prptr->prstate = PR_SUSP;	/* Initial state is suspended	*/
-	prptr->prprio = priority;
+	prptr->prstate = PR_SUSP;		/* Initial state is suspended	*/
+
+	prptr->burst_done = 0;
+	prptr->is_userproc = 1;
+	prptr->number_bursts = number_bursts;
+	prptr->sleep_duration = sleep_duration;
+	prptr->burst_duration = burst_duration;
+
+	prptr->ta = TIME_ALLOTMENT;
+	prptr->qnum = 1;
+
 	prptr->prstkbase = (char *)saddr;
 	prptr->prstklen = ssize;
 	prptr->prname[PNMLEN-1] = NULLCH;
 	prptr->prtime = ctr1000;
 	prptr->create+=1;
-	prptr->runtime_remaining = 0;
-	prptr->is_userproc = 0;
 
 	for (i=0 ; i<PNMLEN-1 && (prptr->prname[i]=name[i])!=NULLCH; i++)
 		;

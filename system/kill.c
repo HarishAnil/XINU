@@ -10,6 +10,7 @@ syscall	kill(
 	  pid32		pid		/* ID of process to kill	*/
 	)
 {
+	long int start = ctr1000;
 	intmask	mask;			/* Saved interrupt mask		*/
 	struct	procent *prptr;		/* Ptr to process's table entry	*/
 	int32	i;			/* Index into descriptors	*/
@@ -34,6 +35,11 @@ syscall	kill(
 	switch (prptr->prstate) {
 	case PR_CURR:
 		prptr->prstate = PR_FREE;	/* Suicide */
+		prptr->kill+=1;
+		if(proctab[currpid].is_userproc == 1){
+			kprintf("-%d",ctr1000);
+			kprintf("\nP%d-termination:%d",currpid,ctr1000);
+		}
 		resched();
 
 	case PR_SLEEP:
@@ -55,5 +61,6 @@ syscall	kill(
 	}
 
 	restore(mask);
+	prptr->kill_time += (ctr1000 - start);
 	return OK;
 }

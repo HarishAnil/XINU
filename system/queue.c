@@ -44,8 +44,12 @@ pid32	dequeue(
 	} else if (isempty(q)) {
 		return EMPTY;
 	}
-
-	pid = getfirst(q);
+	if(q == readylist)
+		pid = getfirst(q);
+	else{
+		pid = getlast(q);
+		//kprintf("\ndequeuing from userlist process %s with runtime remaining: %d",proctab[pid].prname,proctab[pid].runtime_remaining);
+	}
 	queuetab[pid].qprev = EMPTY;
 	queuetab[pid].qnext = EMPTY;
 	return pid;

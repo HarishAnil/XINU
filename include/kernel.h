@@ -54,7 +54,11 @@ typedef	int32	status;		/* returned status value (OK/SYSERR)	*/
 #define	EOF	(-2)		/* End-of-file (usually from read)	*/
 #define	TIMEOUT	(-3)		/* system call timed out		*/
 
-extern	qid16	readylist;	/* global ID for list of ready processes*/
+extern	qid16	readylist;	/* global ID for list of system ready processes*/
+extern	qid16	userlist;	/* global ID for highest priority list of user ready processes*/
+extern	qid16	userlist2;	/* global ID for 2nd highest priority list of user ready processes*/
+extern	qid16	userlist3;	/* global ID for 3rd highest priority list of user ready processes*/
+extern	qid16	userlist4;	/* global ID for lowest priority list of user ready processes*/
 
 #define	MINSTK	400		/* minimum stack size in bytes		*/
 

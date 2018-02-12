@@ -15,13 +15,17 @@ status	insert(
 	int16	curr;			/* Runs through items in a queue*/
 	int16	prev;			/* Holds previous node index	*/
 
+	//kprintf("\n%d::Call from insert.c: Caller: %s...inserting process %s into q: %d",ctr1000,proctab[currpid].prname,proctab[pid].prname,q);
 	if (isbadqid(q) || isbadpid(pid)) {
 		return SYSERR;
 	}
 
 	curr = firstid(q);
-	while (queuetab[curr].qkey >= key) {
-		curr = queuetab[curr].qnext;
+
+	if(q!=userlist && q!= userlist2 && q!=userlist3 && q!=userlist4){
+		while (queuetab[curr].qkey >= key) {
+			curr = queuetab[curr].qnext;
+		}
 	}
 
 	/* Insert process between curr node and previous node */

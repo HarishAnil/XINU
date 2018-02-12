@@ -14,6 +14,20 @@ extern	int32	arp_alloc(void);
 extern	void	arp_ntoh(struct arppacket *);
 extern	void	arp_hton(struct arppacket *);
 
+/* in file syscall_summary.c*/
+extern void pr_status_syscall_summary(void);
+
+
+/* in file create_timed_proc.c*/
+//extern void create_timed_proc(void);
+
+/* in file create_user_proc.c */
+extern void burst_execution(uint32,uint32,uint32);
+
+extern void print_ready_list(void);
+extern void print_user_list(void);
+
+
 /* in file ascdate.c */
 extern	status	ascdate(uint32, char *);
 
@@ -43,6 +57,9 @@ extern	syscall	control(did32, int32, int32, int32);
 
 /* in file create.c */
 extern	pid32	create(void *, uint32, pri16, char *, uint32, ...);
+
+/* in file create_user_proc.c*/
+extern	pid32	create_user_proc(void *, uint32, uint32, char *, uint32, ...);
 
 /* in file ctxsw.S */
 extern	void	ctxsw(void *, void *);
@@ -447,6 +464,7 @@ extern	umsg32	recvtime(int32);
 
 /* in file resched.c */
 extern	void	resched(void);
+//extern	void	resched1(void);
 extern	status	resched_cntl(int32);
 
 /* in file intutils.S */
